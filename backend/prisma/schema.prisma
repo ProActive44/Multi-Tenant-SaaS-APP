@@ -1,0 +1,69 @@
+// Prisma Schema for Multi-Tenant SaaS
+// Single database, shared schema architecture
+// Tenant isolation via org_id foreign key
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MULTI-TENANCY: Organization Model
+// ============================================
+// Each organization represents a tenant
+// All other models will reference this via org_id
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique // URL-friendly identifier (e.g., acme-corp)
+  domain    String?  @unique // Optional custom domain
+  
+  // Subscription & Status
+  plan      String   @default("free") // free, pro, enterprise
+  status    String   @default("active") // active, suspended, cancelled
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations (will be added as we build)
+  users     User[]
+  
+  @@index([slug])
+  @@index([status])
+  @@map("organizations")
+}
+
+// ============================================
+// USER MODEL (Multi-tenant aware)
+// ============================================
+// Users belong to organizations
+// A user can potentially belong to multiple orgs (future enhancement)
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           String   @default("member") // owner, admin, member
+  
+  // MULTI-TENANCY: Organization relationship
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Status & Metadata
+  isActive       Boolean  @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([email])
+  @@map("users")
+}
