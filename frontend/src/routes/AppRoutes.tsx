@@ -6,6 +6,9 @@ import { Login } from '../pages/Login';
 import { Users } from '../pages/Users';
 import { CreateUser } from '../pages/CreateUser';
 import { EditUser } from '../pages/EditUser';
+import { TaskList } from '../pages/tasks/TaskList';
+import { CreateTask } from '../pages/tasks/CreateTask';
+import { EditTask } from '../pages/tasks/EditTask';
 import { SuperAdminLogin } from '../pages/super-admin/SuperAdminLogin';
 import { Organizations } from '../pages/super-admin/Organizations';
 import { CreateOrganization } from '../pages/super-admin/CreateOrganization';
@@ -41,6 +44,34 @@ export const AppRoutes: React.FC = () => {
                     element={
                         <ProtectedRoute allowedRoles={['ORG_OWNER', 'ORG_ADMIN']}>
                             <EditUser />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Task Routes */}
+                <Route
+                    path="/tasks"
+                    element={
+                        <ProtectedRoute>
+                            <TaskList />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/tasks/create"
+                    element={
+                        <ProtectedRoute allowedRoles={['ORG_OWNER', 'ORG_ADMIN']}>
+                            <CreateTask />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/tasks/edit/:id"
+                    element={
+                        <ProtectedRoute>
+                            <EditTask />
                         </ProtectedRoute>
                     }
                 />
