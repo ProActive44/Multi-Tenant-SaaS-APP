@@ -32,9 +32,21 @@ export const usersApi = {
         return response.data;
     },
 
+    // Get user by ID
+    getUserById: async (userId: string): Promise<ApiResponse<User>> => {
+        const response = await axiosInstance.get<ApiResponse<User>>(`/users/${userId}`);
+        return response.data;
+    },
+
     // Create user
     createUser: async (payload: CreateUserPayload): Promise<ApiResponse<User>> => {
         const response = await axiosInstance.post<ApiResponse<User>>('/users', payload);
+        return response.data;
+    },
+
+    // Update user
+    updateUser: async (userId: string, data: Partial<User>): Promise<ApiResponse<User>> => {
+        const response = await axiosInstance.patch<ApiResponse<User>>(`/users/${userId}`, data);
         return response.data;
     },
 

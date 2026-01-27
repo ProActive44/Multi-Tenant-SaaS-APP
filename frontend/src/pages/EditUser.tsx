@@ -1,21 +1,51 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usersApi } from '../api/auth.api';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
-import type { UserRole } from '../types/auth';
+import { usersApi } from '../api/auth.api';
+import type { User, UserRole } from '../types/auth';
 
-export const CreateUser: React.FC = () => {
+export const EditUser: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [user, setUser] = useState<User | null>(null);
     const [formData, setFormData] = useState({
-        email: '',
-        password: '',
         firstName: '',
         lastName: '',
+        email: '',
         role: 'ORG_MEMBER' as UserRole,
     });
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const navigate = useNavigate();
+    useEffect(() => {
+        if (id) {
+            fetchUser();
+        }
+    }, [id]);
+
+    const fetchUser = async () => {
+        if (!id) return;
+
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await usersApi.getUserById(id);
+            const userData = response.data;
+            setUser(userData);
+            setFormData({
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                role: userData.role,
+            });
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to load user');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({
@@ -27,21 +57,58 @@ export const CreateUser: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setIsLoading(true);
+        setIsSaving(true);
 
         try {
-            await usersApi.createUser(formData);
+            if (!id) return;
+            await usersApi.updateUser(id, formData);
             navigate('/users');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to create user');
+            setError(err.response?.data?.message || 'Failed to update user');
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
 
     const handleCancel = () => {
         navigate('/users');
     };
+
+    if (isLoading) {
+        return (
+            <DashboardLayout>
+                <div className="p-8">
+                    <div className="flex items-center justify-center h-64">
+                        <div className="inline-flex items-center gap-3 text-gray-600">
+                            <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Loading user...</span>
+                        </div>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    if (error && !user) {
+        return (
+            <DashboardLayout>
+                <div className="p-8">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                        <p className="text-red-700">{error}</p>
+                        <button
+                            onClick={() => navigate('/users')}
+                            className="mt-4 text-red-600 hover:text-red-800 font-medium"
+                        >
+                            ← Back to Users
+                        </button>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -58,9 +125,9 @@ export const CreateUser: React.FC = () => {
                             </svg>
                         </button>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Create New User</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">Edit User</h1>
                             <p className="text-gray-600 mt-1">
-                                Add a new team member to your organization
+                                Update user details and role
                             </p>
                         </div>
                     </div>
@@ -126,58 +193,22 @@ export const CreateUser: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Account Information Section */}
-                            <div className="pt-6 border-t border-gray-200">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
-                                    Account Credentials
-                                </h3>
-
-                                <div className="space-y-6">
-                                    {/* Email */}
-                                    <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Email Address <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                                            placeholder="user@example.com"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Password */}
-                                    <div>
-                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Password <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type="password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                                            placeholder="Minimum 6 characters"
-                                            minLength={6}
-                                            required
-                                        />
-                                        <p className="mt-2 text-sm text-gray-500 flex items-center gap-1.5">
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                            </svg>
-                                            Password must be at least 6 characters long
-                                        </p>
-                                    </div>
+                                {/* Email */}
+                                <div className="mt-6">
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Email Address <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                                        placeholder="user@example.com"
+                                        required
+                                    />
                                 </div>
                             </div>
 
@@ -211,7 +242,7 @@ export const CreateUser: React.FC = () => {
                                             <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                             </svg>
-                                            <span>This user will be created in your organization and will have access based on their assigned role.</span>
+                                            <span>Changing the role will update the user's permissions immediately.</span>
                                         </p>
                                     </div>
                                 </div>
@@ -221,23 +252,23 @@ export const CreateUser: React.FC = () => {
                             <div className="flex gap-3 pt-6 border-t border-gray-200">
                                 <button
                                     type="submit"
-                                    disabled={isLoading}
+                                    disabled={isSaving}
                                     className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/30"
                                 >
-                                    {isLoading ? (
+                                    {isSaving ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Creating User...
+                                            Saving Changes...
                                         </span>
                                     ) : (
                                         <span className="flex items-center justify-center gap-2">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Create User
+                                            Save Changes
                                         </span>
                                     )}
                                 </button>
@@ -245,7 +276,7 @@ export const CreateUser: React.FC = () => {
                                     type="button"
                                     onClick={handleCancel}
                                     className="px-6 py-3 text-gray-700 font-medium bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-                                    disabled={isLoading}
+                                    disabled={isSaving}
                                 >
                                     Cancel
                                 </button>

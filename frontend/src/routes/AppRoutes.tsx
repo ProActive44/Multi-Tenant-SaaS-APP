@@ -1,18 +1,23 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { SuperAdminProtectedRoute } from '../auth/SuperAdminProtectedRoute';
 import { Login } from '../pages/Login';
 import { Users } from '../pages/Users';
 import { CreateUser } from '../pages/CreateUser';
+import { EditUser } from '../pages/EditUser';
+import { SuperAdminLogin } from '../pages/super-admin/SuperAdminLogin';
+import { Organizations } from '../pages/super-admin/Organizations';
+import { CreateOrganization } from '../pages/super-admin/CreateOrganization';
+import { OrganizationDetails } from '../pages/super-admin/OrganizationDetails';
 
 export const AppRoutes: React.FC = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Public Routes */}
+                {/* Organization User Routes */}
                 <Route path="/login" element={<Login />} />
 
-                {/* Protected Routes */}
                 <Route
                     path="/users"
                     element={
@@ -31,6 +36,45 @@ export const AppRoutes: React.FC = () => {
                     }
                 />
 
+                <Route
+                    path="/users/edit/:id"
+                    element={
+                        <ProtectedRoute allowedRoles={['ORG_OWNER', 'ORG_ADMIN']}>
+                            <EditUser />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Super Admin Routes */}
+                <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+
+                <Route
+                    path="/super-admin/organizations"
+                    element={
+                        <SuperAdminProtectedRoute>
+                            <Organizations />
+                        </SuperAdminProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/super-admin/organizations/create"
+                    element={
+                        <SuperAdminProtectedRoute>
+                            <CreateOrganization />
+                        </SuperAdminProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/super-admin/organizations/:id"
+                    element={
+                        <SuperAdminProtectedRoute>
+                            <OrganizationDetails />
+                        </SuperAdminProtectedRoute>
+                    }
+                />
+
                 {/* Default redirect */}
                 <Route path="/" element={<Navigate to="/users" replace />} />
 
@@ -40,3 +84,4 @@ export const AppRoutes: React.FC = () => {
         </BrowserRouter>
     );
 };
+

@@ -9,6 +9,8 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import organizationRoutes from './modules/organizations/organization.routes.js';
 import userRoutes from './modules/users/user.routes.js';
+import superAdminAuthRoutes from './modules/super-admin/super-admin-auth.routes.js';
+import superAdminOrgRoutes from './modules/super-admin/super-admin-org.routes.js';
 import logger from './utils/logger.js';
 
 const app = express();
@@ -73,6 +75,10 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/users', userRoutes);
+
+// Super Admin routes
+app.use('/api/super-admin/auth', superAdminAuthRoutes);
+app.use('/api/super-admin/organizations', superAdminOrgRoutes);
 
 // ============================================
 // ERROR HANDLING
