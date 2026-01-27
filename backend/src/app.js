@@ -13,6 +13,9 @@ import logger from './utils/logger.js';
 
 const app = express();
 
+// console.log("DB URL:", process.env.DATABASE_URL);
+
+
 // ============================================
 // SECURITY MIDDLEWARE
 // ============================================
