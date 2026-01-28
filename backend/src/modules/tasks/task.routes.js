@@ -7,7 +7,7 @@ const router = express.Router();
 
 // All task routes require authentication and organization context
 // Super Admins are blocked by requireOrganization
-router.use(authenticate, requireOrganization, tenantContext);
+router.use(authenticate, requireOrganization,   );
 
 // Create task
 router.post('/', taskController.createTask);

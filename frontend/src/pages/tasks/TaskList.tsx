@@ -149,6 +149,7 @@ export const TaskList: React.FC = () => {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignees</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -173,12 +174,19 @@ export const TaskList: React.FC = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex -space-x-2 overflow-hidden">
                                                 {task.assignees.map((assignee) => (
-                                                    <div key={assignee.id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600" title={`${assignee.user.firstName} ${assignee.user.lastName}`}>
+                                                    <div
+                                                        key={assignee.id}
+                                                        className="h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 relative z-0"
+                                                        title={`${assignee.user.firstName} ${assignee.user.lastName}`}
+                                                    >
                                                         {assignee.user.firstName[0]}{assignee.user.lastName[0]}
                                                     </div>
                                                 ))}
                                                 {task.assignees.length === 0 && <span className="text-sm text-gray-400">Unassigned</span>}
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {task.createdBy.firstName} {task.createdBy.lastName}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
