@@ -6,10 +6,18 @@ import 'express-async-errors';
 
 import { config } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import authRoutes from './modules/auth/auth.routes.js';
 import organizationRoutes from './modules/organizations/organization.routes.js';
+import userRoutes from './modules/users/user.routes.js';
+import superAdminAuthRoutes from './modules/super-admin/super-admin-auth.routes.js';
+import superAdminOrgRoutes from './modules/super-admin/super-admin-org.routes.js';
+import taskRoutes from './modules/tasks/task.routes.js';
 import logger from './utils/logger.js';
 
 const app = express();
+
+// console.log("DB URL:", process.env.DATABASE_URL);
+
 
 // ============================================
 // SECURITY MIDDLEWARE
@@ -65,11 +73,14 @@ app.get('/health', (req, res) => {
 // API ROUTES
 // ============================================
 
+app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/tasks', taskRoutes);
 
-// Future routes will be added here:
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
+// Super Admin routes
+app.use('/api/super-admin/auth', superAdminAuthRoutes);
+app.use('/api/super-admin/organizations', superAdminOrgRoutes);
 
 // ============================================
 // ERROR HANDLING

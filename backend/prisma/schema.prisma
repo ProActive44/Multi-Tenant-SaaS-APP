@@ -18,22 +18,23 @@ datasource db {
 // All other models will reference this via org_id
 
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique // URL-friendly identifier (e.g., acme-corp)
-  domain    String?  @unique // Optional custom domain
-  
+  id     String  @id @default(uuid())
+  name   String
+  slug   String  @unique // URL-friendly identifier (e.g., acme-corp)
+  domain String? @unique // Optional custom domain
+
   // Subscription & Status
-  plan      String   @default("free") // free, pro, enterprise
-  status    String   @default("active") // active, suspended, cancelled
-  
+  plan   String @default("free") // free, pro, enterprise
+  status String @default("active") // active, suspended, cancelled
+
   // Metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations (will be added as we build)
-  users     User[]
-  
+  users User[]
+  tasks Task[]
+
   @@index([slug])
   @@index([status])
   @@map("organizations")
@@ -42,28 +43,118 @@ model Organization {
 // ============================================
 // USER MODEL (Multi-tenant aware)
 // ============================================
-// Users belong to organizations
-// A user can potentially belong to multiple orgs (future enhancement)
+// Users can be:
+// 1. SUPER_ADMIN - Global users (organizationId = null)
+// 2. ORG_USER - Organization users (organizationId required)
+
+enum UserRole {
+  SUPER_ADMIN // Global admin, no organization
+  ORG_OWNER // Organization owner
+  ORG_ADMIN // Organization admin
+  ORG_MEMBER // Organization member
+}
 
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  passwordHash   String
-  firstName      String
-  lastName       String
-  role           String   @default("member") // owner, admin, member
-  
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(ORG_MEMBER)
+
   // MULTI-TENANCY: Organization relationship
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+  // NULL for SUPER_ADMIN, required for ORG_* roles
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   // Status & Metadata
-  isActive       Boolean  @default(true)
-  lastLoginAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Task Relations
+  createdTasks  Task[]         @relation("TaskCreator")
+  assignedTasks TaskAssignee[]
+
   @@index([organizationId])
   @@index([email])
+  @@index([role])
   @@map("users")
+}
+
+// ============================================
+// TASK MANAGEMENT (Organization-scoped)
+// ============================================
+// Tasks belong to organizations
+// Multiple users can be assigned to a single task
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  REOPENED
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?      @db.Text
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(OPEN)
+  dueDate     DateTime?
+
+  // MULTI-TENANCY: Organization relationship (REQUIRED)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Task Creator
+  createdById String
+  createdBy   User   @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-Assignee Relation
+  assignees TaskAssignee[]
+
+  @@index([organizationId])
+  @@index([createdById])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+// ============================================
+// TASK ASSIGNEE (Join Table)
+// ============================================
+// Allows multiple users to be assigned to a single task
+
+model TaskAssignee {
+  id String @id @default(uuid())
+
+  // Task relationship
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  // User relationship
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  assignedAt DateTime @default(now())
+
+  // Ensure unique task-user pairs
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_assignees")
 }
