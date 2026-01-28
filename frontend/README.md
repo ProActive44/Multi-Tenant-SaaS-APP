@@ -4,42 +4,57 @@ Modern, responsive frontend for the Multi-Tenant SaaS application built with Rea
 
 ## 🚀 Tech Stack
 
-- **Framework**: React 19 with TypeScript
+- **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
-- **Styling**: CSS (ready for Tailwind or styled-components)
-- **State Management**: React Context (ready for Redux/Zustand)
-- **API Client**: Fetch/Axios (to be configured)
-- **Routing**: React Router (to be added)
+- **Styling**: Tailwind CSS
+- **State Management**: React Context (AuthContext)
+- **API Client**: Axios with Interceptors
+- **Routing**: React Router DOM v6
 
 ## 📁 Project Structure
 
 ```
 frontend/
 ├── src/
-│   ├── components/      # Reusable UI components
+│   ├── api/             # Axios setup & API endpoints
+│   ├── auth/            # Auth Context & Providers
+│   ├── components/      # Reusable UI components (Layout, ProtectedRoute)
 │   ├── pages/           # Page components
-│   ├── hooks/           # Custom React hooks
-│   ├── services/        # API service layer
-│   ├── context/         # React Context providers
-│   ├── types/           # TypeScript type definitions
-│   ├── utils/           # Utility functions
+│   │   ├── tasks/       # Task management pages
+│   │   ├── super-admin/ # Super Admin pages
+│   │   └── ...          # Auth & User pages
+│   ├── routes/          # App Routes configuration
+│   ├── types/           # TypeScript interfaces
 │   ├── App.tsx          # Main app component
 │   └── main.tsx         # Entry point
-├── public/              # Static assets
 └── index.html           # HTML template
 ```
 
-## 🎯 Features (Planned)
+## 🎯 Features Implemented
 
-- [ ] Authentication UI (Login/Register)
-- [ ] Organization Dashboard
-- [ ] User Management
-- [ ] Role-based UI rendering
-- [ ] Responsive design
-- [ ] Dark mode support
-- [ ] Form validation
-- [ ] Error boundaries
-- [ ] Loading states
+### Authentication
+- **Dual Login Portals:** Separate login pages for Super Admins (`/super-admin/login`) and Organization Users (`/login`).
+- **Secure Auth:** JWT storage in localStorage with automatic header injection.
+- **Protected Routes:** Role-based route guards (`ProtectedRoute`).
+
+### Super Admin Portal
+- **Dashboard:** Overview of system status.
+- **Organization Management:** Create, List, Enable/Disable Organizations.
+- **Admin Provisioning:** Create initial Org Admins.
+
+### Organization Portal
+- **Dashboard:** Task and User overview.
+- **Task Management:**
+  - Create, Edit, Delete Tasks.
+  - Multi-user assignment.
+  - Status workflow (Open -> In Progress -> Completed).
+  - Priority levels and Due Dates.
+- **User Management:**
+  - Add/Remove users.
+  - Role assignment (Admin, Member).
+- **RBAC UI:**
+  - Elements conditionally rendered based on permissions (e.g., "Create Task" button hidden for Members).
+  - Form fields disabled for unauthorized actions.
 
 ## 🛠️ Development
 
@@ -60,64 +75,23 @@ Runs on `http://localhost:5173`
 npm run build
 ```
 
-### Preview Production Build
-```bash
-npm run preview
-```
-
-### Lint Code
-```bash
-npm run lint
-```
-
 ## 🔌 API Integration
 
-The frontend will connect to the backend API at:
-- **Development**: `http://localhost:5000/api`
-- **Production**: Configure via environment variables
+The frontend connects to the backend API via Axios.
 
 ### Environment Variables
 
 Create `.env` file:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL="http://localhost:5000/api"
 ```
 
-## 🎨 Design System (To Be Implemented)
+## 🔐 Security
 
-- Modern, clean UI
-- Consistent color palette
-- Responsive breakpoints
-- Reusable components
-- Accessibility (WCAG 2.1)
-
-## 📦 Recommended Packages
-
-Consider adding:
-- `react-router-dom` - Routing
-- `axios` - HTTP client
-- `react-hook-form` - Form handling
-- `zod` - Schema validation
-- `@tanstack/react-query` - Data fetching
-- `tailwindcss` - Utility-first CSS (optional)
-
-## 🔐 Authentication Flow
-
-1. User logs in → Backend returns JWT
-2. Store JWT in localStorage/sessionStorage
-3. Include JWT in API requests
-4. Redirect to dashboard
-5. Extract organization context from JWT
-
-## 📝 Next Steps
-
-1. Set up routing (React Router)
-2. Create authentication pages
-3. Build organization dashboard
-4. Implement API service layer
-5. Add form validation
-6. Create reusable components
+- **Token Management:** Automatic token attachment via Axios interceptors.
+- **Session Handling:** Auto-logout on 401 Unauthorized responses.
+- **Role Validation:** Frontend checks match backend RBAC for seamless UX.
 
 ---
 
-**Built with React + TypeScript + Vite**
+**Built with React + TypeScript + Tailwind CSS**

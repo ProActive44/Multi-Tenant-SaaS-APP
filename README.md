@@ -1,204 +1,116 @@
 # Multi-Tenant SaaS Application
 
-Production-grade Multi-Tenant SaaS application with modern frontend and scalable backend.
+A robust SaaS-style application featuring distinct Super Admin and Organization portals. Built with a focus on tenant isolation, role-based access control (RBAC), and secure task management.
 
-## 🏗️ Architecture Overview
+## 🛠️ Tech Stack
 
-This is a **monorepo** containing both frontend and backend:
+- **Backend:** Node.js, Express.js
+- **Database:** PostgreSQL (via Prisma ORM)
+- **Frontend:** React, TypeScript, Tailwind CSS
+- **Authentication:** JWT, BCrypt
 
-```
-Multi-Tenant SaaS APP/
-├── frontend/          # React/Next.js frontend
-├── backend/           # Node.js + Express + Prisma API
-└── README.md          # This file
-```
+## ✨ Key Features
 
-### Tech Stack
+- **Dual Portal System:**
+  - **Super Admin Portal:** Manage organizations and global admins.
+  - **Organization Portal:** Tenant-specific workspace for task management.
+- **Multi-Tenancy:** Strict data isolation using `organizationId`.
+- **Task Management:** Multi-assignee support, status workflows, and priority levels.
+- **User Management:** Comprehensive tools for managing organization members.
 
-**Backend:**
-- Node.js + Express.js
-- PostgreSQL + Prisma ORM
-- JWT Authentication
-- Multi-tenant architecture (org-based isolation)
+## 🔐 Authentication & Authorization
 
-**Frontend:**
-- React (to be implemented)
-- Modern UI/UX
-- Responsive design
-- State management
+The system employs a secure, multi-layered security architecture:
 
-## 🚀 Quick Start
+- **Portal Separation:** Distinct login flows for Super Admins and Organization Users ensure strict access boundaries.
+- **JWT Authentication:** Stateless, secure session management using JSON Web Tokens.
+- **Role-Based Access Control (RBAC):** Granular permissions enforce what Super Admins, Org Owners, Admins, and Members can do.
+- **Tenant Enforcement:** Middleware automatically validates tenant context on every request, preventing cross-organization data access.
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
-- npm or yarn
+## 👥 Roles Overview
 
-### Installation
+| Role | Scope | Key Capabilities |
+| :--- | :--- | :--- |
+| **Super Admin** | Global | Manage Organizations, Create Org Admins |
+| **Org Owner** | Tenant | Full control over Org Users & Tasks |
+| **Org Admin** | Tenant | Manage Users, Create/Edit/Assign Tasks (Manager) |
+| **Org Member** | Tenant | View Assigned Tasks, Update Status |
 
-1. **Clone and navigate to project**
-```bash
-cd "Multi-Tenant SaaS APP"
-```
+## 🔑 Environment Variables
 
-2. **Setup Backend**
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your database credentials
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-```
+Create a `.env` file in the `backend` directory:
 
-Backend runs on `http://localhost:5000`
+```env
+# Database
+DATABASE_URL="postgresql://user:password@host:port/dbname"
 
-3. **Setup Frontend** (coming soon)
-```bash
-cd frontend
-npm install
-npm run dev
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Security
+JWT_SECRET="your-super-secret-key"
+JWT_EXPIRES_IN="24h"
+
+# CORS
+CORS_ORIGIN="http://localhost:5173"
 ```
 
-Frontend will run on `http://localhost:3000`
+Create a `.env` file in the `frontend` directory:
 
-## 📁 Project Structure
-
-### Backend (`/backend`)
-```
-backend/
-├── src/
-│   ├── config/              # Database, environment config
-│   ├── middleware/          # Auth, tenant context, error handling
-│   ├── modules/             # Feature modules (organizations, users)
-│   ├── utils/               # Logger, response helpers
-│   └── app.js               # Express app
-├── prisma/
-│   └── schema.prisma        # Database schema
-└── server.js                # Entry point
+```env
+VITE_API_URL="http://localhost:5000/api"
 ```
 
-### Frontend (`/frontend`)
-Coming soon - Modern React application with:
-- Authentication UI
-- Organization management
-- User dashboard
-- Responsive design
+## 🚀 Setup Instructions
 
-## 🔐 Multi-Tenancy Architecture
+### Backend Setup
+1. Navigate to backend: `cd backend`
+2. Install dependencies: `npm install`
+3. Set up environment variables (see above).
+4. Run migrations: `npx prisma migrate dev`
+5. Start server: `npm run dev`
 
-### How It Works
+### Frontend Setup
+1. Navigate to frontend: `cd frontend`
+2. Install dependencies: `npm install`
+3. Start dev server: `npm run dev`
 
-1. **Organization-based isolation**: Each tenant = one organization
-2. **Single database, shared schema**: Cost-effective and scalable
-3. **Row-level security**: All queries filtered by `organizationId`
-4. **JWT-based context**: Tenant ID embedded in authentication token
 
-### Data Isolation
 
-```javascript
-// Every user belongs to an organization
-User {
-  id: "user-123"
-  email: "john@acme.com"
-  organizationId: "org-456"  // ← Tenant isolation
-}
+## 📌 Assumptions & Design Decisions
 
-// All queries are scoped
-const users = await prisma.user.findMany({
-  where: { organizationId: req.tenantId }  // ← Automatic filtering
-});
-```
+- Super Admins are restricted to organization management only and have no access to organization-level users or tasks to ensure strict tenant isolation.
+- Each user belongs to exactly one organization.
+- Organization ownership is assigned during organization creation.
+- Email notifications are mocked for demo purposes, which is permitted by the requirements.
 
-## 🛣️ API Endpoints
 
-Base URL: `http://localhost:5000/api`
+## 📋 Task Management Rules
 
-### Organizations
-- `POST /organizations` - Create organization
-- `GET /organizations` - List all (paginated)
-- `GET /organizations/:id` - Get by ID
-- `PATCH /organizations/:id` - Update
-- `DELETE /organizations/:id` - Delete
-- `PATCH /organizations/:id/plan` - Update subscription
-- `PATCH /organizations/:id/suspend` - Suspend
-- `PATCH /organizations/:id/activate` - Activate
+- Tasks can be assigned only to users within the same organization.
+- Only the task creator or assigned users can close a task.
+- Only the task creator can reopen or edit a completed task.
+- All task rules are enforced at the API level.
 
-### Health Check
-- `GET /health` - Server status
 
-## 🔧 Development Scripts
+## ✅ Assessment Alignment
 
-### Backend
-```bash
-cd backend
-npm run dev              # Start dev server
-npm run prisma:studio    # Open database GUI
-npm run prisma:migrate   # Run migrations
-```
+This application fulfills all mandatory requirements of the MERN Multi-Tenant SaaS assessment, including strict portal separation, tenant isolation, RBAC, and task business rules.
 
-### Frontend (coming soon)
-```bash
-cd frontend
-npm run dev              # Start dev server
-npm run build            # Production build
-```
 
-## 📝 Development Roadmap
 
-### ✅ Phase 1: Backend Foundation (Current)
-- [x] Project structure
-- [x] Express + Prisma setup
-- [x] Organization CRUD
-- [x] Multi-tenant architecture
-- [x] Error handling & logging
+## 🧪 Demo Credentials
+These credentials are for local testing and demonstration purposes only.
 
-### 🚧 Phase 2: Authentication (Next)
-- [ ] User registration/login
-- [ ] JWT implementation
-- [ ] Password hashing
-- [ ] Refresh tokens
+### Super Admin
+- Email: superadmin@gmail.com
+- Password: super@123
 
-### 📋 Phase 3: Frontend
-- [ ] React setup
-- [ ] Authentication UI
-- [ ] Organization dashboard
-- [ ] User management
+### Organization Admin
+- Email: sundar@gmail.com
+- Password: sundar@123
 
-### 🎯 Phase 4: Advanced Features
-- [ ] Role-based access control (RBAC)
-- [ ] Subscription management
-- [ ] Billing integration
-- [ ] Webhooks & events
-- [ ] Audit logs
-
-## 🔒 Security Features
-
-- Helmet.js security headers
-- CORS configuration
-- Rate limiting
-- Environment variable validation
-- SQL injection protection (Prisma)
-- XSS protection
-
-## 📚 Documentation
-
-- [Backend Documentation](./backend/README.md)
-- Frontend Documentation (coming soon)
-
-## 🤝 Contributing
-
-This is a production-grade template. Feel free to:
-1. Add new features
-2. Improve security
-3. Enhance performance
-4. Add tests
-
-## 📄 License
-
-ISC
-
----
-
-**Built with ❤️ for scalable SaaS applications**
+### Organization Member
+- Email: Ruth@gmail.com
+- Password: ruth@123
