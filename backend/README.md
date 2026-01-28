@@ -6,9 +6,9 @@ Production-grade Multi-Tenant SaaS backend built with Node.js, Express, and Pris
 
 ### Multi-Tenancy Strategy
 - **Pattern**: Single database, shared schema
-- **Isolation**: Organization-based (org_id foreign key)
-- **Tenant Context**: Extracted from JWT and enforced via middleware
-- **Data Isolation**: All queries filtered by organizationId
+- **Isolation**: Organization-based (`organizationId` foreign key)
+- **Tenant Context**: Extracted from JWT and enforced via middleware (`req.tenantId`)
+- **Data Isolation**: All queries filtered by `organizationId`
 
 ### Layered Architecture
 ```
@@ -23,7 +23,11 @@ backend/
 │   ├── config/              # Configuration (database, env)
 │   ├── middleware/          # Express middleware (auth, tenant, errors)
 │   ├── modules/             # Feature modules
-│   │   └── organizations/   # Organization module (CRUD)
+│   │   ├── auth/            # Authentication (Login, Register)
+│   │   ├── organizations/   # Organization management
+│   │   ├── super-admin/     # Super Admin features
+│   │   ├── tasks/           # Task management
+│   │   └── users/           # User management
 │   ├── utils/               # Utilities (logger, response helpers)
 │   └── app.js               # Express app setup
 ├── prisma/
@@ -45,15 +49,35 @@ npm install
 ```
 
 2. **Configure environment**
-```bash
-cp .env.example .env
-# Edit .env with your database credentials
+Create a `.env` file:
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=5000
+
+# Database Configuration
+DATABASE_URL="postgresql://user:password@host:port/dbname"
+
+# JWT Configuration
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_EXPIRES_IN="7d"
+
+# CORS Configuration
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000 // 15 minutes
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Super Admin Configuration
+SUPER_ADMIN_EMAIL="superadmin@gmail.com"
+SUPER_ADMIN_PASSWORD="super@123"
 ```
 
 3. **Setup database**
 ```bash
-npm run prisma:generate
-npm run prisma:migrate
+npx prisma generate
+npx prisma migrate dev
 ```
 
 4. **Start development server**
@@ -63,52 +87,70 @@ npm run dev
 
 Server runs on `http://localhost:5000`
 
-## 📊 Database Schema
+## �️ API Endpoints
 
-### Organization Model
-Represents a tenant in the system with subscription management.
+### Authentication
+- `POST /api/auth/register` - Organization User Registration
+- `POST /api/auth/login` - Organization User Login
+- `GET /api/auth/me` - Get Current User Profile
 
-### User Model
-Users belonging to organizations with role-based access.
+### Super Admin Authentication
+- `POST /api/super-admin/auth/login` - Super Admin Login
+- `GET /api/super-admin/auth/me` - Get Super Admin Profile
 
-## 🛣️ API Endpoints
+### Super Admin Organization Management
+- `POST /api/super-admin/organizations` - Create Organization
+- `GET /api/super-admin/organizations` - List Organizations
+- `GET /api/super-admin/organizations/:id` - Get Organization Details
+- `PATCH /api/super-admin/organizations/:id` - Update Organization
+- `PATCH /api/super-admin/organizations/:id/enable` - Enable Organization
+- `PATCH /api/super-admin/organizations/:id/disable` - Disable Organization
+- `DELETE /api/super-admin/organizations/:id` - Delete Organization
 
-### Organizations
-- `POST /api/organizations` - Create organization
-- `GET /api/organizations` - List organizations (paginated)
-- `GET /api/organizations/:id` - Get organization
-- `PATCH /api/organizations/:id` - Update organization
-- `DELETE /api/organizations/:id` - Delete organization
-- `PATCH /api/organizations/:id/plan` - Update subscription plan
-- `PATCH /api/organizations/:id/suspend` - Suspend organization
-- `PATCH /api/organizations/:id/activate` - Activate organization
+### Tasks (Organization Portal)
+- `POST /api/tasks` - Create Task
+- `GET /api/tasks` - List Tasks
+- `GET /api/tasks/:id` - Get Task Details
+- `PATCH /api/tasks/:id` - Update Task
+- `DELETE /api/tasks/:id` - Delete Task
 
-### Health Check
-- `GET /health` - Server health status
-
-## 🔧 Scripts
-
-- `npm run dev` - Start development server with auto-reload
-- `npm start` - Start production server
-- `npm run prisma:generate` - Generate Prisma client
-- `npm run prisma:migrate` - Run database migrations
-- `npm run prisma:studio` - Open Prisma Studio GUI
+### Users (Organization Portal)
+- `GET /api/users` - List Users
+- `POST /api/users` - Create User
+- `GET /api/users/:id` - Get User Details
+- `PATCH /api/users/:id` - Update User
+- `DELETE /api/users/:id` - Delete User
+- `PATCH /api/users/:id/status` - Toggle User Status
+- `GET /api/users/me` - Get Current User Profile
 
 ## 🔐 Multi-Tenancy Implementation
 
-All queries are automatically scoped to the authenticated user's organization:
+All queries are automatically scoped to the authenticated user's organization via middleware:
 
 ```javascript
-// ✅ Tenant-scoped query
-const users = await prisma.user.findMany({
-  where: { organizationId: req.tenantId }
+// Middleware extracts tenantId from JWT
+const organizationId = req.tenantId;
+
+// Repository uses it for scoping
+return await prisma.task.findMany({
+  where: { organizationId }
 });
 ```
 
 ## 🔒 Security Features
 
-- Helmet.js for security headers
-- CORS configuration
-- Rate limiting
-- JWT authentication (to be implemented)
-- Input validation (to be enhanced)
+- **Helmet.js**: Security headers
+- **CORS**: Configured for frontend access
+- **Rate Limiting**: Brute-force protection
+- **JWT Authentication**: Secure stateless sessions
+- **RBAC**: Role-Based Access Control (Super Admin, Owner, Admin, Member)
+- **Input Validation**: Request body validation
+
+## 👥 Roles & Permissions
+
+| Role | Scope | Capabilities |
+| :--- | :--- | :--- |
+| **Super Admin** | Global | Manage Organizations, Create Org Admins |
+| **Org Owner** | Tenant | Full control over Org Users & Tasks |
+| **Org Admin** | Tenant | Manage Users, Create/Edit/Assign Tasks |
+| **Org Member** | Tenant | View Assigned Tasks, Update Status |
