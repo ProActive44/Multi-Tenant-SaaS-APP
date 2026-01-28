@@ -15,6 +15,12 @@ Production-grade Multi-Tenant SaaS backend built with Node.js, Express, and Pris
 Routes → Controllers → Services → Repositories → Database
 ```
 
+## 🌐 Live API
+
+Base URL: [https://multi-tenant-saas-app-koqw.onrender.com/api](https://multi-tenant-saas-app-koqw.onrender.com/api)
+
+> ⚠️ **Note:** Deployed on a free Render instance. May take **1-2 minutes** to wake up from inactivity.
+
 ## 📁 Project Structure
 
 ```
