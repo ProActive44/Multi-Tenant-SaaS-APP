@@ -11,6 +11,12 @@ Modern, responsive frontend for the Multi-Tenant SaaS application built with Rea
 - **API Client**: Axios with Interceptors
 - **Routing**: React Router DOM v6
 
+## 🌐 Live Demo
+
+[https://multi-tenant-saa-s-app.vercel.app](https://multi-tenant-saa-s-app.vercel.app)
+
+> ⚠️ **Note:** The backend is deployed on a free Render instance. It may take **1-2 minutes** to spin up. If the app seems stuck on login, please wait a moment for the server to wake up.
+
 ## 📁 Project Structure
 
 ```

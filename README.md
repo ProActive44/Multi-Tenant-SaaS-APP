@@ -9,6 +9,13 @@ A robust SaaS-style application featuring distinct Super Admin and Organization 
 - **Frontend:** React, TypeScript, Tailwind CSS
 - **Authentication:** JWT, BCrypt
 
+## 🌐 Live Demo
+
+- **Frontend:** [https://multi-tenant-saa-s-app.vercel.app](https://multi-tenant-saa-s-app.vercel.app)
+- **Backend API:** [https://multi-tenant-saas-app-koqw.onrender.com/api](https://multi-tenant-saas-app-koqw.onrender.com/api)
+
+> ⚠️ **Note:** The backend is deployed on a free Render instance. It may take **1-2 minutes** to spin up after a period of inactivity. Please be patient on the first request.
+
 ## ✨ Key Features
 
 - **Dual Portal System:**
